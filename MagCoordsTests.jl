@@ -27,8 +27,6 @@ sun_ecliptic_longitude_geopack08(T₀) = r360(sun_mean_longitude_geopack08(T₀)
                                        + (1.91946 - 0.004789*(1+T₀))*sind(sun_mean_anomaly_geopack08(T₀))
                                        + 0.020094*sind(2*sun_mean_anomaly_geopack08(T₀)))
 
-sun_longitude_functions = [sun_mean_longitude_geopack08, sun_mean_longitude_H1992, sun_mean_long_meeus98, sun_mean_longitude_AA12]
-
 # evidently this should actually be UT1 J2000 epoch-based, but very small difference (see Fränz and Harper, 2002)
 GMST82(T₀)     = r360(180 + 360*(fday(T₀) + (24110.54841 + (8640184.812866 + (0.093104 - 0.0000062*T₀)*T₀)*T₀)/86400))
 GMST_FH02(T₀)  = r360(280.46061837 + 360.98564736629*d₀(T₀) + 0.0003875*T₀^2 - 2.6E-8*T₀^3)
@@ -97,17 +95,6 @@ obliquity_nutation_correction(T₀) = 0.0026*cos(125.0-0.05295*d₀(T₀)) + 0.0
 @test maximum(abs.(sun_mean_anomaly_AA12.(-1.0:1/1000:1.0)            - M.(-1.0:1/1000:1.0)))       < 0.0015
 @test maximum(abs.(sun_mean_anomaly_geopack08.(-1.0:1/1000:1.0)       - M.(-1.0:1/1000:1.0)))       < 0.01
 
-for long in sun_longitude_functions
-    println(maximum(abs.(long.(-1.0:1/1000:1.0)     - Λ.(-1.0:1/1000:1.0))))
-end
-
-# using PyPlot
-# times = collect(-1.0:1/1000:1.0)
-# for long in sun_longitude_functions
-#     plot(times, (long.(times)     - Λ.(times)))
-# end
-# legend(('1', '2', '3', '4'))
-
 @test maximum(abs.(sun_mean_longitude_geopack08.(-1.0:1/1000:1.0)     - Λ.(-1.0:1/1000:1.0)))     < 0.01
 @test maximum(abs.(sun_mean_longitude_H1992.(-1.0:1/1000:1.0)         - Λ.(-1.0:1/1000:1.0)))     < 0.01
 @test maximum(abs.(sun_mean_long_meeus98.(-1.0:1/1000:1.0)            - Λ.(-1.0:1/1000:1.0)))     < 0.01
@@ -155,7 +142,6 @@ test_vectors_LTspherical = ([1.0,  0.0, 12.0],
 @test degrees.(0:2π/360:2π) ≈ 0:1:360
 @test radians([1, 1, 1]) == [1, π/180, π/180]  # assumes (r, θ, ϕ) vector
 @test degrees([1, 1, 1]) == [1, 180/π, 180/π]
-
 
 # Table 8 from Fränz and Harper, 2002; Aug 28, 1996, 16:46:00
 # Here are some transformed vectors that we will use to test our coordinate transformations

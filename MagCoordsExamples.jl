@@ -84,11 +84,9 @@ PokerSM = [MLTspherical(mat*cartesian([1, 65.1367, -147.4472])) for mat in SM_fr
 mlt2aloct(mlt)   = ((mlt + 12) % 24)*π/12  # RCM-E local time coordinate
 for t in eachindex(times)
     (r, θ, MLT) = PokerSM[t]
-#    println(times[t], "  ", θ, "  ", MLT, "  ", (90 - θ)*π/180, "  ", 3 + 150*mlt2aloct(MLT)/2π)
-    @printf("%s  %8.5f  %8.5f  %7.5f  %7.5f%s", times[t], θ, MLT, (90 - θ)*π/180, 3 + 150*mlt2aloct(MLT)/2π, "\n")
+    print(times[t], "  ", θ, ' ', MLT, (90 - θ)*π/180, 3 + 150*mlt2aloct(MLT)/2π, "\n")
 
 end
-
 
 
 times = DateTime(2013, 3, 17, 0, 0, 0, 0):Dates.Minute(10):DateTime(2013, 3, 20, 0, 0, 0, 0)
@@ -106,8 +104,7 @@ MillstoneMAG = [MLTspherical(mat*cartesian([1, 42.82, -71.5])) for mat in MAG_fr
 mlt2aloct(mlt)   = ((mlt + 12) % 24)*π/12  # RCM-E local time coordinate
 for t in eachindex(times)
     (r, θ, MLT) = MillstoneSM[t]
-#    println(times[t], "  ", θ, "  ", MLT, "  ", (90 - θ)*π/180, "  ", 3 + 150*mlt2aloct(MLT)/2π)
-    @printf("%s  %8.5f  %8.5f  %7.5f  %7.5f%s", times[t], θ, MLT, (90 - θ)*π/180, 3 + 150*mlt2aloct(MLT)/2π, "\n")
+    print(times[t], "  ", θ, ' ', MLT, (90 - θ)*π/180, 3 + 150*mlt2aloct(MLT)/2π, "\n")
 
 end
 

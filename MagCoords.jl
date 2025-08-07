@@ -1,3 +1,7 @@
+# You might need to...
+# import Pkg; Pkg.add("Interpolations")
+
+
 module MagCoords
 using Dates
 using Interpolations
@@ -10,6 +14,28 @@ export GEO_from_GEI, GSE_from_GEI, GSE_from_GEO, GSM_from_GSE, GSM_from_GEI, GSM
        GSE_from_GSM, GSE_from_SM,  GSE_from_MAG, GSM_from_SM,  GSM_from_MAG, MAG_from_SM,
        cartesian, spherical, degrees, radians, LTspherical, MLTspherical,
        cartesian_from_LTspherical, cartesian_from_MLTspherical, L_shell, dipole_mapped_mlat, RE_km
+
+# IGRF coefficients; earlier years are available
+# 2030 is made up for extrapolation purposes, using the "SV" (secular variation) numbers from the latest IGRF coefficient.
+# If you're here because you're trying to run a date in 2030 or beyond, and it didn't work, it's easy to update the coefficients below
+# https://www.ngdc.noaa.gov/IAGA/vmod/coeffs/igrf14coeffs.txt
+# https://www.ncei.noaa.gov/products/international-geomagnetic-reference-field
+years      =  [  1970.0,   1975.0,   1980.0,   1985.0,   1990.0,   1995.0,   2000.0,    2005.0,    2010.0,   2015.0,      2020.0,   2025.0,             2030.0,]
+g1_0_array =  [-30220.0, -30100.0, -29992.0, -29873.0, -29775.0, -29692.0, -29619.4, -29554.63, -29496.57, -29441.46,  -29403.41, -29350.0,  -29350.0 + 5*12.6,]
+g1_1_array =  [ -2068.0,  -2013.0,  -1956.0,  -1905.0,  -1848.0,  -1784.0,  -1728.2,  -1669.05,  -1586.42,  -1501.77,   -1451.37,  -1410.3,   -1410.3 + 5*10.0,]
+h1_1_array =  [  5737.0,   5675.0,   5604.0,   5500.0,   5406.0,   5306.0,   5186.1,   5077.99,   4944.26,   4795.99,    4653.35,   4545.5,    4545.5 + 5*(-21.5),]
+
+# interpolated IGRF parameters
+g1_0 = scale(interpolate(g1_0_array, BSpline(Quadratic(Natural(OnGrid())))), years[1]:5:years[end])
+g1_1 = scale(interpolate(g1_1_array, BSpline(Quadratic(Natural(OnGrid())))), years[1]:5:years[end])
+h1_1 = scale(interpolate(h1_1_array, BSpline(Quadratic(Natural(OnGrid())))), years[1]:5:years[end])
+
+# magnetic dipole properties as calculated from interpolated IGRF coefficients
+y(T₀) = 2000 + 0.5/365.25 + 100*T₀             # decimal year to be used for IGRF coefficient interpolation
+earth_magnetic_moment(T₀) = norm([ h1_1(y(T₀)), g1_1(y(T₀)), g1_0(y(T₀)) ])  # Fränz and Harper Equation 21
+magnetic_Npole_glon(T₀) = (180/π)*atan(-h1_1(y(T₀)), -g1_1(y(T₀)))
+magnetic_Npole_glat(T₀) = 90 - acosd(-g1_0(y(T₀))/earth_magnetic_moment(T₀))      # also sometimes calculated from arctan
+
 
 # Earth Magnetosphere coordinate transformation matrices
 # most everything here is done in degrees because that's what astronomical measurements are generally made in (deg/min/arcsec)
@@ -39,25 +65,6 @@ sun_mean_obliquity(T₀) = (@evalpoly T₀ 84381.406000 -46.836769 -0.0001831 0.
 # Meeus calls the sun ecliptic longitude the true longitude
 sun_ecliptic_longitude(T₀) = r360(Λ(T₀) + (1.914600 - 0.004817*T₀ - 0.000014*T₀*T₀)*sind(M(T₀)) +
                                        (0.019993 - 0.000101*T₀)*sind(2*M(T₀)) + 0.000290*sind(3*M(T₀)))
-
-# IGRF coefficients; earlier years are available; 2025 is made up for extrapolation purposes, as is 2030.
-# I guess I should just extrapolate as far into the future as needed, but still update the IGRF coefficients when available.
-# https://www.ngdc.noaa.gov/IAGA/vmod/igrf12coeffs.txt
-years      =  [  1970.0,   1975.0,   1980.0,   1985.0,   1990.0,   1995.0,   2000.0,    2005.0,    2010.0,   2015.0,    2020.0,   2025.0,                                2030.0,]
-g1_0_array =  [-30220.0, -30100.0, -29992.0, -29873.0, -29775.0, -29692.0, -29619.4, -29554.63, -29496.57, -29441.46, -29403.41, -29403.41 + 5*(-29403.41 + 29441.46)/5,  -29403.41 + 10*(-29403.41 + 29441.46)/5,]
-g1_1_array =  [ -2068.0,  -2013.0,  -1956.0,  -1905.0,  -1848.0,  -1784.0,  -1728.2,  -1669.05,  -1586.42, -1501.77,   -1451.37,  -1451.37 + 5*( -1451.37 +  1501.77)/5,   -1451.37 + 10*( -1451.37 +  1501.77)/5,]
-h1_1_array =  [  5737.0,   5675.0,   5604.0,   5500.0,   5406.0,   5306.0,   5186.1,   5077.99,   4944.26,  4795.99,    4653.35,   4653.35 + 5*(  4653.35 -  4795.99)/5,    4653.35 + 10*(  4653.35 -  4795.99)/5,]
-
-# interpolated IGRF parameters
-g1_0 = scale(interpolate(g1_0_array, BSpline(Quadratic(Natural(OnGrid())))), years[1]:5:years[end])
-g1_1 = scale(interpolate(g1_1_array, BSpline(Quadratic(Natural(OnGrid())))), years[1]:5:years[end])
-h1_1 = scale(interpolate(h1_1_array, BSpline(Quadratic(Natural(OnGrid())))), years[1]:5:years[end])
-
-# magnetic dipole properties as calculated from interpolated IGRF coefficients
-y(T₀) = 2000 + 0.5/365.25 + 100*T₀             # decimal year to be used for IGRF coefficient interpolation
-earth_magnetic_moment(T₀) = norm([ h1_1[y(T₀)], g1_1[y(T₀)], g1_0[y(T₀)] ])  # Fränz and Harper Equation 21
-magnetic_Npole_glon(T₀) = (180/π)*atan(-h1_1[y(T₀)], -g1_1[y(T₀)])
-magnetic_Npole_glat(T₀) = 90 - acosd(-g1_0[y(T₀)]/earth_magnetic_moment(T₀))      # also sometimes calculated from arctan
 
 # single-dimension rotation matrices needed to compute coordinate transformation matrices
 Rx(angle) = [1       0            0     ;

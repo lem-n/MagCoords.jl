@@ -1,5 +1,7 @@
-using Base.Test.@test
+using Test
 using MagCoords
+using LinearAlgebra
+using Dates
 import MagCoords.fday, MagCoords.r360, MagCoords.d₀, MagCoords.GMST, MagCoords.sun_mean_obliquity, MagCoords.M
 import MagCoords.Λ, MagCoords.sun_ecliptic_longitude, MagCoords.magnetic_Npole_glat, MagCoords.magnetic_Npole_glon
 import MagCoords.J2000century, MagCoords.Rx, MagCoords.Ry, MagCoords.Rz
@@ -64,27 +66,27 @@ obliquity_nutation_correction(T₀) = 0.0026*cos(125.0-0.05295*d₀(T₀)) + 0.0
 @test Rz( 90)*[0.0, 0.0, 1.0] == [0.0,  0.0,  1.0]
 
 # This is just a sanity check that I've defined the inverses properly
-@test GEO_from_GEI(0.0) * GEI_from_GEO(0.0) ≈ eye(3)
-@test GSE_from_GEI(0.0) * GEI_from_GSE(0.0) ≈ eye(3)
-@test GSE_from_GEO(0.0) * GEO_from_GSE(0.0) ≈ eye(3)
-@test GSM_from_GSE(0.0) * GSE_from_GSM(0.0) ≈ eye(3)
-@test GSM_from_GEI(0.0) * GEI_from_GSM(0.0) ≈ eye(3)
-@test GSM_from_GEO(0.0) * GEO_from_GSM(0.0) ≈ eye(3)
-@test MAG_from_GEO(0.0) * GEO_from_MAG(0.0) ≈ eye(3)
-@test MAG_from_GEI(0.0) * GEI_from_MAG(0.0) ≈ eye(3)
-@test MAG_from_GSE(0.0) * GSE_from_MAG(0.0) ≈ eye(3)
-@test MAG_from_GSM(0.0) * GSM_from_MAG(0.0) ≈ eye(3)
-@test  SM_from_GSM(0.0) * GSM_from_SM(0.0)  ≈ eye(3)
-@test  SM_from_GSE(0.0) * GSE_from_SM(0.0)  ≈ eye(3)
-@test  SM_from_GEI(0.0) * GEI_from_SM(0.0)  ≈ eye(3)
-@test  SM_from_GEO(0.0) * GEO_from_SM(0.0)  ≈ eye(3)
-@test  SM_from_MAG(0.0) * MAG_from_SM(0.0)  ≈ eye(3)
-@test  SM_from_GEO(0.0) * GEO_from_GSM(0.0) * GSM_from_GEI(0.0) * GEI_from_MAG(0.0) * MAG_from_GSE(0.0) * GSE_from_SM(0.0) ≈ eye(3)
-@test GEO_from_GEI(0.0) * GEI_from_GSE(0.0) * GSE_from_GSM(0.0) * GSM_from_MAG(0.0) * MAG_from_SM(0.0)  * SM_from_GEO(0.0) ≈ eye(3)
+@test GEO_from_GEI(0.0) * GEI_from_GEO(0.0) ≈ I(3)
+@test GSE_from_GEI(0.0) * GEI_from_GSE(0.0) ≈ I(3)
+@test GSE_from_GEO(0.0) * GEO_from_GSE(0.0) ≈ I(3)
+@test GSM_from_GSE(0.0) * GSE_from_GSM(0.0) ≈ I(3)
+@test GSM_from_GEI(0.0) * GEI_from_GSM(0.0) ≈ I(3)
+@test GSM_from_GEO(0.0) * GEO_from_GSM(0.0) ≈ I(3)
+@test MAG_from_GEO(0.0) * GEO_from_MAG(0.0) ≈ I(3)
+@test MAG_from_GEI(0.0) * GEI_from_MAG(0.0) ≈ I(3)
+@test MAG_from_GSE(0.0) * GSE_from_MAG(0.0) ≈ I(3)
+@test MAG_from_GSM(0.0) * GSM_from_MAG(0.0) ≈ I(3)
+@test  SM_from_GSM(0.0) * GSM_from_SM(0.0)  ≈ I(3)
+@test  SM_from_GSE(0.0) * GSE_from_SM(0.0)  ≈ I(3)
+@test  SM_from_GEI(0.0) * GEI_from_SM(0.0)  ≈ I(3)
+@test  SM_from_GEO(0.0) * GEO_from_SM(0.0)  ≈ I(3)
+@test  SM_from_MAG(0.0) * MAG_from_SM(0.0)  ≈ I(3)
+@test  SM_from_GEO(0.0) * GEO_from_GSM(0.0) * GSM_from_GEI(0.0) * GEI_from_MAG(0.0) * MAG_from_GSE(0.0) * GSE_from_SM(0.0) ≈ I(3)
+@test GEO_from_GEI(0.0) * GEI_from_GSE(0.0) * GSE_from_GSM(0.0) * GSM_from_MAG(0.0) * MAG_from_SM(0.0)  * SM_from_GEO(0.0) ≈ I(3)
 
 # Compare formulas used to other similar formulas to see that they are somewhat close (not expecting them to be in precise agreement)
 # they are being compared over a range of years from 1900 to 2100
-@test maximum(abs.(GMST.(-1.0:1/25:1.0) - 280.46)) < 1  # GMST should be almost the same every 4 years
+@test maximum(abs.(GMST.(-1.0:1/25:1.0) .- 280.46)) < 1  # GMST should be almost the same every 4 years
 @test maximum(abs.(GMST82.(-1.0:1/1000:1.0)                           - GMST.(-1.0:1/1000:1.0))) < 0.001
 @test maximum(abs.(GMST_FH02.(-1.0:1/1000:1.0)                        - GMST.(-1.0:1/1000:1.0))) < 0.001
 @test maximum(abs.(GMST_H1992.(-1.0:1/1000:1.0)                       - GMST.(-1.0:1/1000:1.0))) < 0.001
@@ -99,12 +101,12 @@ for long in sun_longitude_functions
     println(maximum(abs.(long.(-1.0:1/1000:1.0)     - Λ.(-1.0:1/1000:1.0))))
 end
 
-using PyPlot
-times = collect(-1.0:1/1000:1.0)
-for long in sun_longitude_functions
-    plot(times, (long.(times)     - Λ.(times)))
-end
-legend(('1', '2', '3', '4'))
+# using PyPlot
+# times = collect(-1.0:1/1000:1.0)
+# for long in sun_longitude_functions
+#     plot(times, (long.(times)     - Λ.(times)))
+# end
+# legend(('1', '2', '3', '4'))
 
 @test maximum(abs.(sun_mean_longitude_geopack08.(-1.0:1/1000:1.0)     - Λ.(-1.0:1/1000:1.0)))     < 0.01
 @test maximum(abs.(sun_mean_longitude_H1992.(-1.0:1/1000:1.0)         - Λ.(-1.0:1/1000:1.0)))     < 0.01
@@ -153,10 +155,6 @@ test_vectors_LTspherical = ([1.0,  0.0, 12.0],
 @test degrees.(0:2π/360:2π) ≈ 0:1:360
 @test radians([1, 1, 1]) == [1, π/180, π/180]  # assumes (r, θ, ϕ) vector
 @test degrees([1, 1, 1]) == [1, 180/π, 180/π]
-
-
-# conversion from LT/MLT spherical (r, θ, MLT) to cartesian (x,y,z)
-cartesian_from_MLTspherical = cartesian_from_LTspherical
 
 
 # Table 8 from Fränz and Harper, 2002; Aug 28, 1996, 16:46:00

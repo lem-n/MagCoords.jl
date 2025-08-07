@@ -10,4 +10,4 @@ See MagCoordsExamples.jl to learn how to use it.
 
 If you have better versions of any of the astronomical functions used, please don't hesitate to suggest a change. I did my best to try to find the most accurate ones that would work as far into the future as possible, but astrometry buffs are welcome to point out better ones.
 
-This was my first code developed in Julia, a weekend learning project (not developed as part of my job or funded by anyone but myself), so I'm releasing it under the MIT License.
+This was my first code developed in Julia, a weekend learning project (more than one weekend). Since it was not developed as part of my job, or funded by anyone but myself, I'm releasing it under the MIT License.
